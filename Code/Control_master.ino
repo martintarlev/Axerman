@@ -2,15 +2,18 @@
 #include <WiFi.h>
 #define xjoy 32
 #define yjoy 35
+#define bat_on 19
+#define Boost 18
 
 
 // REPLACE WITH YOUR ESP RECEIVER'S MAC ADDRESS
-uint8_t Receiver_Address1[] = {0x30, 0xAE, 0xA4, 0x01, 0x3C, 0x5C};
+uint8_t Receiver_Address1[] = {0x30, 0xAE, 0xA4, 0x06, 0x25, 0x08};
 
 typedef struct struct_message {
   int Pot_x=0;
   int Pot_y=0;
-  int wepon;
+  int ON;
+  int boost;
 } struct_message;
 
 struct_message message;
@@ -24,21 +27,22 @@ void data_sent(const uint8_t *mac_addr, esp_now_send_status_t status) {
   Serial.print(" status:\t");
   Serial.println(status == ESP_NOW_SEND_SUCCESS ? "Delivery Success" : "Delivery Fail");
 }
- 
+
 void setup() {
   Serial.begin(115200);
- 
+
   WiFi.mode(WIFI_STA);
   pinMode(xjoy, INPUT);
   pinMode(yjoy, INPUT);
- 
+  pinMode(bat_on, INPUT);
+  pinMode(Boost, INPUT);
   if (esp_now_init() != ESP_OK) {
     Serial.println("Error initializing ESP-NOW");
     return;
   }
-  
+
   esp_now_register_send_cb(data_sent);
-   
+
   esp_now_peer_info_t peerInfo ={};
   peerInfo.channel = 0;  
   peerInfo.encrypt = false;
@@ -49,12 +53,22 @@ void setup() {
     return;
   }
 }
- 
+
 void loop() {
   esp_err_t outcome = esp_now_send(0, (uint8_t *) &message, sizeof(struct_message));
   int potValue_x = analogRead(xjoy); // Read potentiometer value
   int potValue_y = analogRead(yjoy); // Read potentiometer value
+  int batValue = digitalRead(bat_on);
+  int boostValue = digitalRead(Boost);
 
+  if (batValue == HIGH) 
+  {
+    message.ON = 1;
+  }  
+  else
+  {
+    message.ON = 0;
+  } 
   if (potValue_x < 1500  ) 
   {
     message.Pot_x = 1;
@@ -79,11 +93,19 @@ void loop() {
   {
    message.Pot_y = 0;
   }
+  if (boostValue == HIGH) 
+  {
+    message.boost = 1;
+  }  
+  else
+  {
+    message.boost = 0;
+  } 
   if (outcome == ESP_OK)
   {
     Serial.println("Sent with success");
   }
-  else 
+ else 
   {
     Serial.println("Error sending the data");
   }
@@ -91,4 +113,9 @@ void loop() {
   Serial.println(potValue_x);
   Serial.println(message.Pot_y);
   Serial.println(potValue_y);
+  Serial.println(message.ON);
+  Serial.println(batValue);
+  Serial.println(message.boost);
+  Serial.println(boostValue);
+  
 }
