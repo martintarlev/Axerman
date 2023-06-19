@@ -11,6 +11,7 @@
   #include <InfluxDbClient.h>
   #include <InfluxDbCloud.h>
   
+  
   // WiFi AP SSID
   #define WIFI_SSID "marto"
   // WiFi password

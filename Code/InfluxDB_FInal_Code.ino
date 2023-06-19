@@ -109,13 +109,14 @@ void setup() {
 void loop() 
 {
   sensor.clearFields();
+  Serial.print("Writing: ");
+  Serial.println(sensor.toLineProtocol());
 
   sensor.addField("xjoy", analogRead(xjoy));
   sensor.addField("yjoy", analogRead(yjoy));
   sensor.addField("Boost", digitalRead(Boost));
   
-  Serial.print("Writing: ");
-  Serial.println(sensor.toLineProtocol());
+
   
   esp_err_t outcome = esp_now_send(0, (uint8_t *) &message, sizeof(struct_message));
   int potValue_x = analogRead(xjoy); // Read potentiometer value
